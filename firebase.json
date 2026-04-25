@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"lablink-iot","appId":"1:440403215536:android:a35e81ca5d3bb33947e775","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"lablink-iot","configurations":{"android":"1:440403215536:android:a35e81ca5d3bb33947e775","web":"1:440403215536:web:34a031cc69ba15f347e775"}}}}}}

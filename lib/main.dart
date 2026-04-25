@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'firebase_options.dart';
 
-void main() => runApp(const LabLinkApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const LabLinkApp());
+}
 
 class LabLinkApp extends StatelessWidget {
   const LabLinkApp({super.key});
@@ -115,9 +124,30 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  bool lightsOn = true;
-  bool fansOn = true;
+  bool lightsOn = false;
+  bool fansOn = false;
   int _selectedIndex = 1;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen to light1 realtime changes
+    FirebaseDatabase.instance
+        .ref("devices/lab_switch/light1")
+        .onValue
+        .listen((event) {
+      setState(() => lightsOn = (event.snapshot.value as bool?) ?? false);
+    });
+
+    // Listen to light2 realtime changes
+    FirebaseDatabase.instance
+        .ref("devices/lab_switch/light2")
+        .onValue
+        .listen((event) {
+      setState(() => fansOn = (event.snapshot.value as bool?) ?? false);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +183,13 @@ class _DashboardPageState extends State<DashboardPage> {
               title: 'Lab Lights',
               subtitle: lightsOn ? 'Zone A-C Active' : 'All Off',
               value: lightsOn,
-              onChanged: (v) => setState(() => lightsOn = v),
+              onChanged: (v) {
+                print("LIGHT 1 SWITCH: $v");
+                FirebaseDatabase.instance
+                    .ref("devices/lab_switch/light1")
+                    .set(v);
+                setState(() => lightsOn = v);
+              },
             ),
             const SizedBox(height: 12),
             _buildDeviceCard(
@@ -162,7 +198,13 @@ class _DashboardPageState extends State<DashboardPage> {
               title: 'Ventilation Fans',
               subtitle: fansOn ? 'Running' : 'All Units Offline',
               value: fansOn,
-              onChanged: (v) => setState(() => fansOn = v),
+              onChanged: (v) {
+                print("LIGHT 2 SWITCH: $v");
+                FirebaseDatabase.instance
+                    .ref("devices/lab_switch/light2")
+                    .set(v);
+                setState(() => fansOn = v);
+              },
             ),
           ],
         ),
@@ -175,8 +217,10 @@ class _DashboardPageState extends State<DashboardPage> {
         onTap: (i) => setState(() => _selectedIndex = i),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Status'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart), label: 'Status'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );
@@ -211,7 +255,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     style: const TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold)),
                 Text(subtitle,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    style: const TextStyle(
+                        color: Colors.white54, fontSize: 12)),
               ],
             ),
           ),
